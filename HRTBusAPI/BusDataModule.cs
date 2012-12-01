@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Dynamic;
 using System.Linq;
 using System.Net;
 using HRTBusAPI.API;
+using HRTBusAPI.gtfs;
 using Nancy;
 
 namespace HRTBusAPI
@@ -15,7 +18,11 @@ namespace HRTBusAPI
         {
             Get["/example/ui"] = parameters => View["busfinder.html", null];
 
-            Get["/refresh"] = RefreshBusData;
+            Get["/refresh"] = parameters => RefreshBusData();
+
+            Get["/refresh/GTFS"] = parameters => RefreshGtfsData();
+
+            Get["/refresh/GTFS/today"] = parameters => RefreshGtfsData(true);
 
             Get["/api/routes"] =
                 parameters =>
@@ -64,9 +71,67 @@ namespace HRTBusAPI
                     var result = checkins.Select(checkin => new BusCheckinModel(checkin)).ToList();
                     return Response.AsJson(result);
                 };
+
+            Get["/api/nextbus/{route}/{stop}"] =
+                parameters =>
+                    {
+                        var route = (string)parameters.route;
+                        var stop = (string)parameters.stop;
+                        var now = DateTime.Now;
+                        var today = DateTime.Today;
+
+                        while (route.Length < 3)
+                            route = "0" + route;
+
+                        var activeServices = GTFS.GetActiveServices(now).Select(s=>s.Name);
+
+                        var trips = GTFS.Trips
+                                        .Where(t =>
+                                               t.RouteId == route &&
+                                               activeServices.Contains(t.ServiceId))
+                                        .Select(t => t.TripId);
+
+                        var stopTimes = GTFS.StopTimes
+                                            .Where(st =>
+                                                   st.StopId == stop &&
+                                                   trips.Contains(st.TripId) &&
+                                                   today.Add(st.Arrive) > now)
+                                            .Select(st => today.Add(st.Arrive))
+                                            .ToList();
+
+                        stopTimes.Sort((x, y) => x.CompareTo(y));
+
+                        var list = new List<dynamic>();
+                        
+                        foreach (var dateTime in stopTimes)
+                        {
+                            dynamic o = new ExpandoObject();
+                            o.stopTime = dateTime;
+                            o.stopTimeStr = dateTime.ToString();
+                            list.Add(o);
+                        }
+                        return Response.AsJson(list);
+                    };
         }
 
-        private object RefreshBusData(dynamic parameters)
+        private static string RefreshGtfsData(bool onlyToday = false)
+        {
+            DateTime? date = null;
+            if (onlyToday)
+                date = DateTime.UtcNow.AddHours(-5);
+
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            GtfsPackageManager.Refresh(date);
+            stopwatch.Stop();
+            return string.Format("Loaded {0} Services, {1} Trips, and {2} Stop Times in {3}.",
+                                 GTFS.Services.Count,
+                                 GTFS.Trips.Count,
+                                 GTFS.StopTimes.Count,
+                                 stopwatch.Elapsed);
+        }
+
+        private static string RefreshBusData()
         {
             try
             {
