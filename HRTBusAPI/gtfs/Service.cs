@@ -5,7 +5,7 @@ namespace HRTBusAPI.gtfs
 {
     public class Service
     {
-        public string Name { get; set; }
+        public string ServiceId { get; set; }
         public DateTime Start { get; set; }
         public DateTime End { get; set; }
         public List<DayOfWeek> DaysActive { get; set; }
@@ -15,29 +15,29 @@ namespace HRTBusAPI.gtfs
             DaysActive = new List<DayOfWeek>();
         }
 
-        public static Service Create(string line)
+        public static Service Create(string line, ServiceFieldIndices indices)
         {
             var parts = line.Split(',');
             var service = new Service
                               {
-                                  Name = parts[0],
-                                  Start = DateTime.ParseExact(parts[1], "yyyyMMdd", null),
-                                  End = DateTime.ParseExact(parts[2], "yyyyMMdd", null)
+                                  ServiceId = parts[indices.ServiceId],
+                                  Start = DateTime.ParseExact(parts[indices.StartDate], "yyyyMMdd", null),
+                                  End = DateTime.ParseExact(parts[indices.EndDate], "yyyyMMdd", null)
                               };
 
-            if (parts[3] == "1")
+            if (parts[indices.Monday] == "1")
                 service.DaysActive.Add(DayOfWeek.Monday);
-            if (parts[4] == "1")
+            if (parts[indices.Tuesday] == "1")
                 service.DaysActive.Add(DayOfWeek.Tuesday);
-            if (parts[5] == "1")
+            if (parts[indices.Wednesday] == "1")
                 service.DaysActive.Add(DayOfWeek.Wednesday);
-            if (parts[6] == "1")
+            if (parts[indices.Thursday] == "1")
                 service.DaysActive.Add(DayOfWeek.Thursday);
-            if (parts[7] == "1")
+            if (parts[indices.Friday] == "1")
                 service.DaysActive.Add(DayOfWeek.Friday);
-            if (parts[8] == "1")
+            if (parts[indices.Saturday] == "1")
                 service.DaysActive.Add(DayOfWeek.Saturday);
-            if (parts[9] == "1")
+            if (parts[indices.Sunday] == "1")
                 service.DaysActive.Add(DayOfWeek.Sunday);
 
             return service;

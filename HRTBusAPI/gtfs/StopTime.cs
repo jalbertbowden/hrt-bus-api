@@ -8,18 +8,20 @@ namespace HRTBusAPI.gtfs
         public TimeSpan Arrive { get; set; }
         public TimeSpan Depart { get; set; }
         public string StopId { get; set; }
-        public byte StopSequence { get; set; }
+        public int StopSequence { get; set; }
+        public int Timepoint { get; set; }
 
-        public static StopTime Create(string line)
+        public static StopTime Create(string line, StopTimeFieldIndices indices)
         {
             var parts = line.Split(',');
             return new StopTime
                        {
-                           TripId = parts[0],
-                           Arrive = TimeSpanFromString(parts[1]),
-                           Depart = TimeSpanFromString(parts[2]),
-                           StopId = parts[3],
-                           StopSequence = byte.Parse(parts[4])
+                           TripId = parts[indices.TripId],
+                           Arrive = TimeSpanFromString(parts[indices.ArrivalTime]),
+                           Depart = TimeSpanFromString(parts[indices.DepartureTime]),
+                           StopId = parts[indices.StopId],
+                           StopSequence = int.Parse(parts[indices.StopSequence]),
+                           Timepoint = int.Parse(parts[indices.Timepoint])
                        };
         }
 

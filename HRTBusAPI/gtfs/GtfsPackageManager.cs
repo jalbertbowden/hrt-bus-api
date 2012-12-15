@@ -21,12 +21,12 @@ namespace HRTBusAPI.gtfs
             using(var file = File.OpenText(calendarPath))
             {
                 GTFS.Services.Clear();
-                file.ReadLine();
+                var indicies = FieldIndexUtility.CreateIndex<ServiceFieldIndices>(file.ReadLine());
                 while (!file.EndOfStream)
                 {
-                    var service = Service.Create(file.ReadLine());
+                    var service = Service.Create(file.ReadLine(), indicies);
                     if (date == null || service.Active((DateTime)date))
-                        GTFS.Services.Add(service);
+                        GTFS.Services.Add(service.ServiceId, service);
                 }
             }
 
@@ -35,13 +35,12 @@ namespace HRTBusAPI.gtfs
             using (var file = File.OpenText(tripsPath))
             {
                 GTFS.Trips.Clear();
-                var services = GTFS.Services.Select(s => s.Name).Distinct().ToList();
-                file.ReadLine();
+                var indicies = FieldIndexUtility.CreateIndex<TripFieldIndices>(file.ReadLine());
                 while (!file.EndOfStream)
                 {
-                    var trip = Trip.Create(file.ReadLine());
-                    if (date == null || services.Contains(trip.ServiceId))
-                        GTFS.Trips.Add(trip);
+                    var trip = Trip.Create(file.ReadLine(), indicies);
+                    if (date == null || GTFS.Services.ContainsKey(trip.ServiceId))
+                        GTFS.Trips.Add(trip.TripId, trip);
                 }
             }
 
@@ -50,12 +49,11 @@ namespace HRTBusAPI.gtfs
             using (var file = File.OpenText(stopTimesPath))
             {
                 GTFS.StopTimes.Clear();
-                var trips = GTFS.Trips.Select(t => t.TripId).Distinct().ToList();
-                file.ReadLine();
+                var indicies = FieldIndexUtility.CreateIndex<StopTimeFieldIndices>(file.ReadLine());
                 while (!file.EndOfStream)
                 {
-                    var stopTime = StopTime.Create(file.ReadLine());
-                    if (date == null || trips.Contains(stopTime.TripId))
+                    var stopTime = StopTime.Create(file.ReadLine(), indicies);
+                    if (date == null || GTFS.Trips.ContainsKey(stopTime.TripId))
                         GTFS.StopTimes.Add(stopTime);
                 }
             }

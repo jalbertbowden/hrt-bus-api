@@ -9,16 +9,16 @@ namespace HRTBusAPI.gtfs
         public string BlockId { get; set; }
         public string DirectionId { get; set; }
 
-        public static Trip Create(string line)
+        public static Trip Create(string line, TripFieldIndices indices)
         {
             var parts = line.Split(',');
             return new Trip
                        {
-                           RouteId = parts[0],
-                           ServiceId = parts[1],
-                           TripId = parts[2],
-                           BlockId = parts[3],
-                           DirectionId = parts[4]
+                           RouteId = parts[indices.RouteId],
+                           ServiceId = parts[indices.ServiceId],
+                           TripId = parts[indices.TripId],
+                           BlockId = parts[indices.BlockId],
+                           DirectionId = parts[indices.DirectionId]
                        };
         }
     }

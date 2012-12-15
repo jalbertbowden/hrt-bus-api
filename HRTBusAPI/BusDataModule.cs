@@ -83,13 +83,13 @@ namespace HRTBusAPI
                         while (route.Length < 3)
                             route = "0" + route;
 
-                        var activeServices = GTFS.GetActiveServices(now).Select(s=>s.Name);
+                        var activeServices = GTFS.GetActiveServices(now).Select(s=>s.ServiceId);
 
                         var trips = GTFS.Trips
                                         .Where(t =>
-                                               t.RouteId == route &&
-                                               activeServices.Contains(t.ServiceId))
-                                        .Select(t => t.TripId);
+                                               t.Value.RouteId == route &&
+                                               activeServices.Contains(t.Value.ServiceId))
+                                        .Select(t => t.Value.TripId);
 
                         var stopTimes = GTFS.StopTimes
                                             .Where(st =>
