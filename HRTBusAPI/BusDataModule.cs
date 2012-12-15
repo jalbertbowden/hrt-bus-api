@@ -133,8 +133,6 @@ namespace HRTBusAPI
 
         private static string RefreshBusData()
         {
-            try
-            {
                 var contents = GetFileFromServer(new Uri("ftp://216.54.15.3/Anrd/hrtrtf.txt"));
                 var newCheckins = GetBusCheckinsFromFile(contents);   // oldest first
 
@@ -170,28 +168,23 @@ namespace HRTBusAPI
                 var removed = Checkins.RemoveAll(c => c.CheckinTime < DateTime.UtcNow.AddHours(-5).AddHours(-1));
                 var percentWithRoute = Checkins.FindAll(c => c.HasRoute).Count*100.0/Checkins.Count;
 
-                return string.Format("{0} checkins in FTP file.<br>" +
-                                     "{1} were new.<br>" +
-                                     "{2} new checkins didn't have a route. Routes were found for {3} of those.<br>" +
-                                     "{4} were removed because they were more than an hour old.<br>" +
-                                     "{5} checkins now in memory.<br>" +
-                                     "{6}% have a route.<br>" +
-                                     "{7} auto refreshes.<br>" +
-                                     "Last auto-refresh at {8}",
-                    newCheckins.Count,
-                    newCheckins.Count - duplicates,
-                    withoutRoute,
-                    routeLookedup,
-                    removed,
-                    Checkins.Count,
-                    (int)percentWithRoute,
-                    Global.RefreshCount,
-                    Global.LastRefresh);
-            }
-            catch (Exception ex)
-            {
-                return ex.Message + "<br>" + ex.StackTrace;
-            }
+            return string.Format("{0} checkins in FTP file.<br>" +
+                                 "{1} were new.<br>" +
+                                 "{2} new checkins didn't have a route. Routes were found for {3} of those.<br>" +
+                                 "{4} were removed because they were more than an hour old.<br>" +
+                                 "{5} checkins now in memory.<br>" +
+                                 "{6}% have a route.<br>" +
+                                 "{7} auto refreshes.<br>" +
+                                 "Last auto-refresh at {8}",
+                                 newCheckins.Count,
+                                 newCheckins.Count - duplicates,
+                                 withoutRoute,
+                                 routeLookedup,
+                                 removed,
+                                 Checkins.Count,
+                                 (int) percentWithRoute,
+                                 Global.RefreshCount,
+                                 Global.LastRefresh);
         }
 
         public static string GetFileFromServer(Uri serverUri)
@@ -203,7 +196,7 @@ namespace HRTBusAPI
         public static List<BusCheckin> GetBusCheckinsFromFile(string file)
         {
             if (String.IsNullOrEmpty(file))
-                return null;
+                return new List<BusCheckin>();
 
             return file.Split('\n', '\r')
                 .Select(BusCheckin.Parse)
